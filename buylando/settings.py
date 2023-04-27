@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # project apps
     "core.apps.CoreConfig",
+    "ecommerce.apps.EcommerceConfig",
 ]
 
 MIDDLEWARE = [
