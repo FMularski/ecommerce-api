@@ -1,6 +1,15 @@
 version: '3.9'
 
 services:
+  db:
+    image: postgres
+    env_file:
+      - ./buylando/.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   web:
     build:
       context: .
@@ -9,3 +18,6 @@ services:
       - 8000:8000
     volumes:
       - .:/code
+    depends_on:
+      db:
+        condition: service_healthy
