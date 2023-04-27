@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Project created as a recruitment task."
 authors = ["Filip <mularskif@gmail.com>"]
 readme = "README.md"
-packages = [{include = "ecommerce_api"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
