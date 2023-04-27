@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "ecommerce-api"
+version = "0.1.0"
+description = "Project created as a recruitment task."
+authors = ["Filip <mularskif@gmail.com>"]
+readme = "README.md"
+packages = [{include = "ecommerce_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2"
+django-environ = "^0.10.0"
+djangorestframework = "^3.14.0"
+djangorestframework-simplejwt = "^5.2.2"
+gunicorn = "^20.1.0"
+psycopg2 = "^2.9.6"
+pytest-django = "^4.5.2"
+pytest-factoryboy = "^2.5.1"
+faker = "^18.5.1"
+drf-yasg = "^1.21.5"
+pytest-cov = "^4.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
