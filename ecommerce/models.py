@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 
@@ -48,11 +49,12 @@ class Order(models.Model):
     shipping_address = models.ForeignKey(
         ShippingAddress, on_delete=models.PROTECT, related_name="orders"
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(blank=True)
     payment_deadline = models.DateTimeField(blank=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if not self.payment_deadline:
+        if not self.created_at:
+            self.created_at = timezone.now()
             self.payment_deadline = self.created_at + timedelta(days=5)
         return super().save(force_insert, force_update, using, update_fields)
 
