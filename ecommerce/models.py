@@ -49,19 +49,19 @@ class Order(models.Model):
         ShippingAddress, on_delete=models.PROTECT, related_name="orders"
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    payment_deadline = models.DateTimeField()
+    payment_deadline = models.DateTimeField(blank=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if not self.payment_at:
-            self.payment_at = self.created_at + timedelta(days=5)
+        if not self.payment_deadline:
+            self.payment_deadline = self.created_at + timedelta(days=5)
         return super().save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
-        return _("Order") + str(self.pk).zfill(4)
+        return _("Order") + f" #{str(self.pk).zfill(4)}"
 
     @property
     def total_price(self):
-        return sum([item.product.price for item in self.items])
+        return sum([item.product.price for item in self.items.all()])
 
 
 class OrderItem(models.Model):
