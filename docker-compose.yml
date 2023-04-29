@@ -24,6 +24,7 @@ services:
     volumes:
       - .:/code
       - static:/code/static
+      - media:/code/media
     depends_on:
       db:
         condition: service_healthy
@@ -35,9 +36,11 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - static:/home/app/static
+      - media:/home/app/media
     depends_on:
       web:
         condition: service_started
 
 volumes:
   static:
+  media:

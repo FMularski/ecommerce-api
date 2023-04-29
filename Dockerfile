@@ -15,6 +15,3 @@ COPY poetry.lock pyproject.toml /code/
 RUN poetry install --without dev
 
 COPY . /code/
-
-
-

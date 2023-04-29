@@ -1,5 +1,7 @@
 import random
 
+import requests
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django_countries import countries
@@ -32,7 +34,19 @@ class Command(BaseCommand):
                 city=fake.city(),
                 country=random.choice(countries),
             )
-        self.stdout.write(self.style.SUCCESS("Sample shipping adddresses loaded."))
+        self.stdout.write(self.style.SUCCESS("Sample shipping addresses loaded."))
+
+    def _get_image(self, width, height):
+        url = fake.image_url(width=width, height=height)
+        image_response = requests.get(url)
+
+        filename = f"{fake.word()}.png"
+
+        # [1:] removes the '/' at the beginning
+        with open(settings.MEDIA_URL[1:] + filename, "wb") as image_file:
+            image_file.write(image_response.content)
+
+        return filename
 
     def _load_products(self, categories, n=1):
         if Product.objects.exists():
@@ -49,6 +63,7 @@ class Command(BaseCommand):
                     description=f"Description of {product_name} {i}",
                     price=random.randint(100, 5000) + 0.99,
                     category=category,
+                    image=self._get_image(width=400, height=300),
                 )
                 for i in range(1, n + 1)
             ]
