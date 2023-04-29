@@ -1,3 +1,4 @@
+import os
 import random
 
 import requests
@@ -42,11 +43,14 @@ class Command(BaseCommand):
 
         filename = f"{fake.word()}.png"
 
+        if not os.path.exists(settings.MEDIA_URL[1:] + Product.IMAGE_FULL_DIR):
+            os.makedirs(settings.MEDIA_URL[1:] + Product.IMAGE_FULL_DIR)
+
         # [1:] removes the '/' at the beginning
-        with open(settings.MEDIA_URL[1:] + filename, "wb") as image_file:
+        with open(settings.MEDIA_URL[1:] + Product.IMAGE_FULL_DIR + filename, "wb") as image_file:
             image_file.write(image_response.content)
 
-        return filename
+        return Product.IMAGE_FULL_DIR + filename
 
     def _load_products(self, categories, n=1):
         if Product.objects.exists():
@@ -67,7 +71,8 @@ class Command(BaseCommand):
                 )
                 for i in range(1, n + 1)
             ]
-            Product.objects.bulk_create(products)
+            for product in products:
+                product.save()
 
         self.stdout.write(self.style.SUCCESS("Sample products loaded."))
 
