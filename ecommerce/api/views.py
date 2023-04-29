@@ -60,3 +60,14 @@ class ProductListView(generics.ListAPIView):
             products = products.order_by(order_by)
 
         return products
+
+
+class ProductDetailView(generics.RetrieveAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    @swagger_auto_schema(
+        operation_description="Returns the product with the given id.",
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
