@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # installed dependencies
+    "drf_yasg",
     # project apps
     "core.apps.CoreConfig",
     "ecommerce.apps.EcommerceConfig",
