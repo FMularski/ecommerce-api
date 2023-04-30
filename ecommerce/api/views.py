@@ -128,7 +128,7 @@ class ProductListView(generics.ListCreateAPIView):
         return products
 
 
-class ProductDetailView(generics.RetrieveAPIView):
+class ProductDetailView(generics.RetrieveDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ReadonlyProductSerializer
 
@@ -137,3 +137,32 @@ class ProductDetailView(generics.RetrieveAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="Deletes the product with the given id.",
+        manual_parameters=[
+            openapi.Parameter(
+                "Authorization",
+                openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                default="Bearer <access>",
+            ),
+        ],
+    )
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
+    def get_serializer_class(self):
+        if self.request.method in ["DELETE"]:
+            return ProductSerializer
+        return ReadonlyProductSerializer
+
+    def get_authenticators(self):
+        if self.request.method in ["DELETE"]:
+            return [auth() for auth in [JWTAuthentication]]
+        return []
+
+    def get_permissions(self):
+        if self.request.method in ["DELETE"]:
+            return [permission() for permission in [permissions.IsAuthenticated, IsSeller]]
+        return []
