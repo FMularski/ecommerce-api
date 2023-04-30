@@ -1,16 +1,44 @@
+# from psycopg2.errors import UndefinedTable
+from django.db.utils import ProgrammingError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics
+from rest_framework import generics, parsers, permissions
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from core.api.permissions import IsSeller
 from ecommerce.models import Product, ProductCategory
 
 from .pagination import ProductPagination
-from .serializers import ProductSerializer
+from .serializers import ProductSerializer, ReadonlyProductSerializer
 
 
-class ProductListView(generics.ListAPIView):
-    serializer_class = ProductSerializer
+class ProductListView(generics.ListCreateAPIView):
     pagination_class = ProductPagination
+    parser_classes = [parsers.MultiPartParser]
+
+    @staticmethod
+    def _get_categories_enum():
+        """
+        Method defining enum of products' categories.
+        It is needed when the enum is needed and the databases is
+        not migrated yet.
+
+        Returns a tuple of lists: names (str) and ids (int)
+        """
+        try:
+            categories = ProductCategory.objects.all()
+            enum_str, enum_int = list(categories.values_list("name", flat=True)), list(
+                categories.values_list("id", flat=True)
+            )
+        except ProgrammingError:
+            enum_str, enum_int = ["Computers", "Smartphones", "Peripherals", "Consoles"], [
+                1,
+                2,
+                3,
+                4,
+            ]
+
+        return enum_str, enum_int
 
     @swagger_auto_schema(
         operation_description="Returns the list of products.",
@@ -26,7 +54,7 @@ class ProductListView(generics.ListAPIView):
                 "category",
                 openapi.IN_QUERY,
                 type=openapi.TYPE_STRING,
-                enum=list(ProductCategory.objects.all().values_list("name", flat=True)),
+                enum=_get_categories_enum()[0],  # str enum
             ),
             openapi.Parameter("desc", openapi.IN_QUERY, type=openapi.TYPE_STRING),
             openapi.Parameter("price", openapi.IN_QUERY, type=openapi.TYPE_NUMBER),
@@ -35,7 +63,45 @@ class ProductListView(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+    @swagger_auto_schema(
+        operation_description="Creates a new product.",
+        manual_parameters=[
+            openapi.Parameter(
+                "Authorization",
+                openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                default="Bearer <access>",
+            ),
+            openapi.Parameter(
+                "category",
+                openapi.IN_FORM,
+                type=openapi.TYPE_NUMBER,
+                enum=_get_categories_enum()[1],  # int enum
+            ),
+        ],
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return ProductSerializer
+        return ReadonlyProductSerializer
+
+    def get_authenticators(self):
+        if self.request.method == "POST":
+            return [auth() for auth in [JWTAuthentication]]
+        return []
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [permission() for permission in [permissions.IsAuthenticated, IsSeller]]
+        return []
+
     def get_queryset(self):
+        if self.request.method == "POST":
+            return Product.objects.all()
+
         products = Product.objects.all().order_by("pk")
 
         # apply filters
@@ -64,7 +130,7 @@ class ProductListView(generics.ListAPIView):
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+    serializer_class = ReadonlyProductSerializer
 
     @swagger_auto_schema(
         operation_description="Returns the product with the given id.",

@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -38,7 +39,9 @@ class ProductCategory(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
-    price = models.DecimalField(max_digits=6, decimal_places=2)  # up to 9999.99
+    price = models.DecimalField(
+        max_digits=6, decimal_places=2, validators=[MinValueValidator]
+    )  # up to 9999.99
     category = models.ForeignKey(
         ProductCategory, on_delete=models.PROTECT, related_name="products"
     )
