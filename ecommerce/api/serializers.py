@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from rest_framework import serializers
 
 from ecommerce import tasks
@@ -95,6 +97,21 @@ class OrderSerializer(serializers.ModelSerializer):
                 "payment_deadline": order.payment_deadline,
             },
             recipients=[user.email],
+        )
+
+        reminder_kwargs = {
+            "subject": "Payment reminder",
+            "temp_html": "ecommerce/email/payment_reminder.html",
+            "temp_str": "ecommerce/email/payment_reminder.txt",
+            "context": {
+                "order": str(order),
+                "total": order.total_price,
+                "payment_deadline": order.payment_deadline,
+            },
+            "recipients": [user.email],
+        }
+        tasks.queue_email.apply_async(
+            kwargs=reminder_kwargs, eta=order.payment_deadline - timedelta(days=1)
         )
 
         return order

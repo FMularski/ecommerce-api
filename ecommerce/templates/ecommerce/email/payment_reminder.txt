@@ -1,0 +1,5 @@
+{% load i18n %}
+
+{% trans "Payment reminder for " %}{{order}}
+{% trans "Total" %}:{{total}} 
+{% trans "Payment deadline" %}:{{payment_deadline}}
