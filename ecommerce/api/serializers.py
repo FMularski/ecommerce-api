@@ -63,6 +63,43 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         exclude = "id", "created_at", "payment_deadline", "user"
 
+    def _send_order_confirmation(self, order):
+        tasks.queue_email.delay(
+            temp_subject="ecommerce/email/order_confirm_subject.txt",
+            temp_html="ecommerce/email/order_confirm.html",
+            temp_str="ecommerce/email/order_confirm.txt",
+            context={
+                "order": str(order),
+                "items": [
+                    {
+                        "name": item.product.name,
+                        "price": item.product.price,
+                        "quantity": item.quantity,
+                    }
+                    for item in order.items.all()
+                ],
+                "total": order.total_price,
+                "payment_deadline": order.payment_deadline,
+            },
+            recipients=[order.user.email],
+        )
+
+    def _queue_payment_reminder(self, order):
+        tasks.queue_email.apply_async(
+            kwargs={
+                "temp_subject": "ecommerce/email/payment_reminder_subject.txt",
+                "temp_html": "ecommerce/email/payment_reminder.html",
+                "temp_str": "ecommerce/email/payment_reminder.txt",
+                "context": {
+                    "order": str(order),
+                    "total": order.total_price,
+                    "payment_deadline": order.payment_deadline,
+                },
+                "recipients": [order.user.email],
+            },
+            eta=order.payment_deadline + timedelta(days=1),
+        )
+
     def create(self, validated_data):
         user = self.context["request"].user
         items = validated_data.pop("items")
@@ -78,41 +115,8 @@ class OrderSerializer(serializers.ModelSerializer):
         items = [OrderItem(**(item_data | {"order": order})) for item_data in items]
         OrderItem.objects.bulk_create(items)
 
-        # send notification email
-        tasks.queue_email.delay(
-            subject="Order received.",
-            temp_html="ecommerce/email/order_received.html",
-            temp_str="ecommerce/email/order_received.txt",
-            context={
-                "order": str(order),
-                "items": [
-                    {
-                        "name": item.product.name,
-                        "price": item.product.price,
-                        "quantity": item.quantity,
-                    }
-                    for item in items
-                ],
-                "total": order.total_price,
-                "payment_deadline": order.payment_deadline,
-            },
-            recipients=[user.email],
-        )
-
-        reminder_kwargs = {
-            "subject": "Payment reminder",
-            "temp_html": "ecommerce/email/payment_reminder.html",
-            "temp_str": "ecommerce/email/payment_reminder.txt",
-            "context": {
-                "order": str(order),
-                "total": order.total_price,
-                "payment_deadline": order.payment_deadline,
-            },
-            "recipients": [user.email],
-        }
-        tasks.queue_email.apply_async(
-            kwargs=reminder_kwargs, eta=order.payment_deadline - timedelta(days=1)
-        )
+        self._send_order_confirmation(order)
+        self._queue_payment_reminder(order)
 
         return order
 

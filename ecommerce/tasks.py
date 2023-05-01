@@ -6,7 +6,8 @@ from buylando.celery import app
 
 
 @app.task
-def queue_email(subject, temp_html, temp_str, context, recipients):
+def queue_email(temp_subject, temp_html, temp_str, context, recipients):
+    subject = render_to_string(temp_subject).replace("\n", "")
     message_html = render_to_string(temp_html, context)
     message_str = render_to_string(temp_str, context)
 
