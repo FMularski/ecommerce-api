@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from ecommerce import tasks
 from ecommerce.models import Order, OrderItem, Product, ProductCategory, ShippingAddress
 
 
@@ -75,9 +76,26 @@ class OrderSerializer(serializers.ModelSerializer):
         items = [OrderItem(**(item_data | {"order": order})) for item_data in items]
         OrderItem.objects.bulk_create(items)
 
-        # schedule celery tasks:
-        # send notification email (instant)
-        # schedule a reminder email (1 day before payment_deadline)
+        # send notification email
+        tasks.queue_email.delay(
+            subject="Order received.",
+            temp_html="ecommerce/email/order_received.html",
+            temp_str="ecommerce/email/order_received.txt",
+            context={
+                "order": str(order),
+                "items": [
+                    {
+                        "name": item.product.name,
+                        "price": item.product.price,
+                        "quantity": item.quantity,
+                    }
+                    for item in items
+                ],
+                "total": order.total_price,
+                "payment_deadline": order.payment_deadline,
+            },
+            recipients=[user.email],
+        )
 
         return order
 

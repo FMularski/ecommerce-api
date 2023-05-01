@@ -1,0 +1,9 @@
+{% load i18n %}
+
+{{order}}
+{% trans "Thank you for your purchase." %}
+{% for item in items %}
+    * {{item.name}} - {{item.price}} x{{item.quantity}}
+{% endfor %}
+{% trans "Total" %}:{{total}}
+{% trans "Payment deadline" %}:{{payment_deadline}}

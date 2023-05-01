@@ -1,0 +1,15 @@
+{% load i18n %}
+
+<h1>{{order}}</h1>
+<p>
+    {% trans "Thank you for your purchase." %}
+</p>
+<ul>
+    {% for item in items %}
+        <li>{{item.name}} - {{item.price}} x{{item.quantity}}</li>
+    {% endfor %}
+<ul>
+<p>
+    <b>{% trans "Total" %}:</b><span>{{total}}</span> 
+    <b>{% trans "Payment deadline" %}:</b><span>{{payment_deadline}}</span>
+<p>

@@ -145,3 +145,6 @@ AUTH_USER_MODEL = "core.User"
 SWAGGER_SETTINGS = {"SECURITY_DEFINITIONS": None}
 
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", "amqp://guest@mq")
+
+EMAIL_BACKEND = env.str("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_SENDER = env.str("EMAIL_SENDER", "seller@mail.com")
