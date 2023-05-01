@@ -1,5 +1,8 @@
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from .serializers import TokenAPIViewResponseSerializer, TokenRefreshAPIViewResponseSerializer
 
 
 class TokenAPIView(TokenObtainPairView):
@@ -14,6 +17,7 @@ class TokenAPIView(TokenObtainPairView):
 
     @swagger_auto_schema(
         operation_description=token_apiview_description,
+        responses={status.HTTP_200_OK: TokenAPIViewResponseSerializer},
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -22,6 +26,7 @@ class TokenAPIView(TokenObtainPairView):
 class TokenRefreshAPIView(TokenRefreshView):
     @swagger_auto_schema(
         operation_description="Returns refreshed access token.",
+        responses={status.HTTP_200_OK: TokenRefreshAPIViewResponseSerializer},
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
