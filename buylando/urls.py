@@ -28,7 +28,7 @@ Created by mularskif@gmail.com
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="E-commerce API",
+        title="Buylando API",
         default_version="v1",
         description=description,
         contact=openapi.Contact(email="mularskif@gmail.com"),
