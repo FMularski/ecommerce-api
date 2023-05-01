@@ -2,7 +2,7 @@ from django.db.models import Count
 from django.db.utils import ProgrammingError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, parsers, permissions
+from rest_framework import generics, parsers, permissions, status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from core.api.permissions import IsCustomer, IsSeller
@@ -236,7 +236,7 @@ class OrderListView(generics.CreateAPIView):
                 default="Bearer <access>",
             ),
         ],
-        responses={201: OrderResponseSerializer},
+        responses={status.HTTP_201_CREATED: OrderResponseSerializer},
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
@@ -274,7 +274,7 @@ class PopularProductsListView(generics.ListAPIView):
                 type=openapi.TYPE_INTEGER,
             ),
         ],
-        responses={200: PopularProductResponseSerializer(many=True)},
+        responses={status.HTTP_200_OK: PopularProductResponseSerializer(many=True)},
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
