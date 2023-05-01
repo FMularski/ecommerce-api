@@ -40,6 +40,17 @@ services:
     depends_on:
       web:
         condition: service_started
+  mq:
+    image: rabbitmq
+  worker:
+    build:
+      context: .
+    command: celery -A buylando worker -l INFO
+    volumes:
+      - .:/code
+    depends_on:
+      mq: 
+        condition: service_started
 
 volumes:
   static:

@@ -143,3 +143,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "core.User"
 
 SWAGGER_SETTINGS = {"SECURITY_DEFINITIONS": None}
+
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", "amqp://guest@mq")
