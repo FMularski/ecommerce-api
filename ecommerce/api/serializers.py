@@ -123,3 +123,31 @@ class OrderSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         response_serializer = OrderResponseSerializer(instance)
         return response_serializer.data
+
+
+class PopularProductResponseSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class PopularProductsRequestSerializer(serializers.Serializer):
+    date_from = serializers.DateTimeField(required=False)
+    date_to = serializers.DateTimeField(required=False)
+    n = serializers.IntegerField(required=False)
+
+    def validate(self, attrs):
+        n = attrs.get("n")
+        if n and n < 0:
+            raise serializers.ValidationError("n must not be a negative number")
+
+        date_from = attrs.get("date_from")
+        date_to = attrs.get("date_to")
+        if date_from and date_to and date_from > date_to:
+            raise serializers.ValidationError("date_from must not be earlier than date_to")
+
+        return attrs
+
+    def to_representation(self, instance):
+        response_serializer = PopularProductResponseSerializer(instance)
+        return response_serializer.data

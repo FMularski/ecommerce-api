@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.db.utils import ProgrammingError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -11,6 +12,8 @@ from .pagination import ProductPagination
 from .serializers import (
     OrderResponseSerializer,
     OrderSerializer,
+    PopularProductResponseSerializer,
+    PopularProductsRequestSerializer,
     ProductSerializer,
     ReadonlyProductSerializer,
 )
@@ -237,3 +240,63 @@ class OrderListView(generics.CreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+class PopularProductsListView(generics.ListAPIView):
+    serializer_class = PopularProductsRequestSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsSeller]
+
+    @swagger_auto_schema(
+        operation_description="Returns the list of the most popular products.",
+        manual_parameters=[
+            openapi.Parameter(
+                "Authorization",
+                openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                default="Bearer <access>",
+            ),
+            openapi.Parameter(
+                "date_from",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description="Format: %Y-%m-%d, ex. 2023-12-31",
+            ),
+            openapi.Parameter(
+                "date_to",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description="Format: %Y-%m-%d, ex. 2023-12-31",
+            ),
+            openapi.Parameter(
+                "n",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+            ),
+        ],
+        responses={200: PopularProductResponseSerializer(many=True)},
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        serializer = self.serializer_class(data=self.request.GET)
+        serializer.is_valid(raise_exception=True)
+
+        date_from = serializer.validated_data.get("date_from")
+        date_to = serializer.validated_data.get("date_to")
+        n = serializer.validated_data.get("n")
+
+        products = Product.objects.all()
+
+        if date_from:
+            products = products.filter(items__order__created_at__gte=date_from)
+        if date_to:
+            products = products.filter(items__order__created_at__lte=date_to)
+
+        products = products.annotate(count=Count("items")).order_by("-count")
+
+        if n:
+            products = products[: int(n)]
+
+        return products
