@@ -4,11 +4,16 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, parsers, permissions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from core.api.permissions import IsSeller
-from ecommerce.models import Product, ProductCategory
+from core.api.permissions import IsCustomer, IsSeller
+from ecommerce.models import Order, Product, ProductCategory
 
 from .pagination import ProductPagination
-from .serializers import ProductSerializer, ReadonlyProductSerializer
+from .serializers import (
+    OrderResponseSerializer,
+    OrderSerializer,
+    ProductSerializer,
+    ReadonlyProductSerializer,
+)
 
 
 def _get_categories_enum():
@@ -205,3 +210,30 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method in ["PUT", "PATCH", "DELETE"]:
             return [permission() for permission in [permissions.IsAuthenticated, IsSeller]]
         return []
+
+
+class OrderListView(generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsCustomer]
+
+    post_description = """
+        Creates an order. 
+        Responses with the total price and the payment deadline.
+    """
+
+    @swagger_auto_schema(
+        operation_description=post_description,
+        manual_parameters=[
+            openapi.Parameter(
+                "Authorization",
+                openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                default="Bearer <access>",
+            ),
+        ],
+        responses={201: OrderResponseSerializer},
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
