@@ -42,6 +42,16 @@ The project was created as a recruitment task.
 ```bash
 git clone https://github.com/FMularski/ecommerce-api.git
 ```
+* Create buylando/.env file with the following content:
+```bash
+SECRET_KEY='top-secret'
+
+POSTGRES_DB=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+```
 * Start the project with docker
 ```bash
 docker compose up
