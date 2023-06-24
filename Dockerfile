@@ -5,7 +5,7 @@ ENV POETRY_VERSION=1.2.2
 
 WORKDIR /code
 
-RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev
+RUN apk update && apk add postgresql-dev gcc python3-dev musl-dev libffi-dev
 
 RUN pip3 install "poetry==$POETRY_VERSION"
 
